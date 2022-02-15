@@ -14,6 +14,7 @@ git clone git@github.com:brujoand/sbp.git
 cd $HOME/projects/sbp/bin
 bash install
 export EDITOR=vim
+sudo apt-get install fonts-powerline
 ```
 
 
