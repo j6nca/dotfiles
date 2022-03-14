@@ -1,13 +1,7 @@
-# dotfiles
-## Setting up workspace
+# Set up for ubuntu work station
 
-Update package installer
-```
-sudo pacman -Syu --ignore jack2 archlinux-keyring
-sudo pacman -Syu --ignore jack2 vim
-```
-
-Install custom bash prompt
+## Customization
+### Powerline Prompt
 ```
 cd $HOME/projects
 git clone git@github.com:brujoand/sbp.git
@@ -17,38 +11,22 @@ export EDITOR=vim
 sudo apt-get install fonts-powerline
 ```
 
+## Tools
 
-Install terraform
+### Terraform
 ```
-sudo pacman -S terraform
-or
-yay --sync tfenv
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+
+sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+
+sudo apt-get update && sudo apt-get install terraform
+terraform --version
 ```
 
-Install AWS CLI
+### AWS CLI
 ```
 curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
 unzip awscliv2.zip
 sudo ./aws/install
 ```
 
-Configure your aws access key + access secret
-`aws configure`
-
-For initial AWS Terraform Setup (Only run if AWS account is brand new)
-Set up the remote state bucket for terraform
-```
-aws s3api create-bucket \
---bucket $BUCKET_NAME \
---region us-east-1 \
---acl private
-```
-Set up the state-lock table for terraform
-```
-aws dynamodb create-table \
---table-name jng-remote-state-lock \
---attribute-definitions AttributeName=LockID,AttributeType=S \
---key-schema AttributeName=LockID,KeyType=HASH \
---provisioned-throughput ReadCapacityUnits=1,WriteCapacityUnits=1 \
---region us-east-1
-```
