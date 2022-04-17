@@ -90,3 +90,4 @@ killall -HUP gnome-shell
 # TODOs
 - bash prompt for terraform workspace (if ever used)
 - use friendlier cluster name in prompt for eks clusters
+- aws profile prompt?
