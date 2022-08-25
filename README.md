@@ -86,6 +86,11 @@ gnome-shell issues:
 ```
 killall -HUP gnome-shell
 ```
+mouse issues:
+```
+sudo modprobe -r psmouse
+sudo modprobe psmouse proto=imps
+```
 
 # TODOs
 - bash prompt for terraform workspace (if ever used)
