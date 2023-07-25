@@ -1,26 +1,85 @@
 # Set up for ubuntu work station
-## VirtualBox
-### Shared Clipboard
-Ensure VB Extension Pack is installed and enabled in `File > Preferences > Extensions`
-as well as desired clipboard settings in `Devices > Shared Clipboard`
-```
-sudo apt-get install virtualbox-guest-x11
-sudo VBoxClient --clipboard
-```
+
 ## Customization
-### Powerline Prompt
+### Git
 ```
-cd $HOME/projects
-git clone git@github.com:brujoand/sbp.git
-cd $HOME/projects/sbp/bin
-bash install
-export EDITOR=vim
-sudo apt-get install fonts-powerline
+sudo apt install git
 ```
-The above needs pcregrep for kubernetes context prompts
+
+### Zsh
 ```
-sudo apt-get install -y pcregrep
+sudo apt install zsh
+chsh -s $(which zsh)
+sh -c "$(wget https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh -O -)"
+git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ~/powerlevel10k
 ```
+
+### asdf
+```
+sudo apt install git
+```
+
+### asdf workspace install
+```
+HELM_VERSION=3.11.1
+CHEZMOI_VERSION=2.33.0
+asdf install helm $HELM_VERSION
+asdf plugin add chezmoi && asdf install chezmoi $CHEZMOI_VERSION
+```
+
+### k3s
+```
+sudo apt install curl
+curl -sfL https://get.k3s.io | sh -
+```
+### k9s
+```
+sudo apt install snap
+snap install k9s
+```
+### kubectx
+```
+sudo git clone https://github.com/ahmetb/kubectx /opt/kubectx
+sudo ln -s /opt/kubectx/kubectx /usr/local/bin/kubectx
+sudo ln -s /opt/kubectx/kubens /usr/local/bin/kubens
+```
+### helm
+```
+asdf install helm $ASDF_VERSION
+```
+### argocd
+```
+helm repo add argo https://argoproj.github.io/argo-helm
+helm install argocd argo/argo-cd -n argocd --create-namespace
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d
+# ArgoCD CLI
+brew install argocd
+```
+### k8s cluster tools
+```
+# cert-manager
+helm repo add jetstack https://charts.jetstack.io
+helm install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.11.0 \
+  --set installCRDs=true
+
+# external-dns
+helm repo add bitnami https://charts.bitnami.com/bitnami
+helm install external-dns -n kube-ops bitnami/external-dns
+
+# nginx ingress controller
+helm upgrade --install ingress-nginx ingress-nginx \ 
+  --repo https://kubernetes.github.io/ingress-nginx \ 
+  --namespace kube-ops
+```
+### brew
+```
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
 
 ### Setup shell configs
 ```
@@ -96,3 +155,12 @@ sudo modprobe psmouse proto=imps
 - bash prompt for terraform workspace (if ever used)
 - use friendlier cluster name in prompt for eks clusters
 - aws profile prompt?
+
+## VirtualBox
+### Shared Clipboard
+Ensure VB Extension Pack is installed and enabled in `File > Preferences > Extensions`
+as well as desired clipboard settings in `Devices > Shared Clipboard`
+```
+sudo apt-get install virtualbox-guest-x11
+sudo VBoxClient --clipboard
+```
