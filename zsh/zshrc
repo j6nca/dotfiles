@@ -3,3 +3,5 @@
 source ~/powerlevel10k/powerlevel10k.zsh-theme
 PATH="/opt/homebrew/bin:$PATH"
 PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+
+. <(flux completion zsh)
