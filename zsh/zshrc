@@ -1,6 +1,6 @@
 . "$HOME/.asdf/asdf.sh"
 . "$HOME/.asdf/completions/asdf.bash"
-. "$HOME/projects/dotfiles/zsh/prompt
+. "$HOME/projects/dotfiles/zsh/prompt"
 . <(flux completion zsh)
 
 PATH="/opt/homebrew/bin:$PATH"

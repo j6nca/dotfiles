@@ -1,3 +1,7 @@
-export PS_GIT_BRANCH=$(git branch --show-current 2>/dev/null); 
-# export PS1="\u@\h>\W>${PS_GIT_BRANCH}$ "
-export PROMPT="%F{green}%n%f %F{blue}%~%f %F{red}${PS_GIT_BRANCH}%f $ "
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats '%b '
+setopt PROMPT_SUBST
+
+PROMPT='%F{green}%n@%*%f %F{blue}%~%f %F{red}${vcs_info_msg_0_}%f$ '
+
