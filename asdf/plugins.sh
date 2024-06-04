@@ -10,3 +10,4 @@ asdf plugin-add aws-vault # https://github.com/karancode/asdf-aws-vault.git
 asdf plugin add talosctl # https://github.com/bjw-s/asdf-talosctl.git
 asdf plugin-add kubectl # https://github.com/asdf-community/asdf-kubectl.git
 asdf plugin-add k9s # https://github.com/looztra/asdf-k9s
+asdf plugin-add fluxctl # https://github.com/stefansedich/asdf-fluxctl
