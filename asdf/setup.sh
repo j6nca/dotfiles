@@ -1,3 +1,7 @@
+# copy 'global' tool-versions
+cp ~/projects/dotfiles/asdf/.tool-versions ~/
+
+# install plugins
 # languages
 asdf plugin add nodejs # https://github.com/asdf-vm/asdf-nodejs.git
 
