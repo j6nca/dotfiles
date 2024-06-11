@@ -1,0 +1,11 @@
+. "$HOME/.asdf/asdf.sh"
+. "$HOME/projects/dotfiles/zsh/prompt"
+. <(flux completion zsh)
+
+# scripts
+. "$HOME/projects/dotfiles/scripts/git.sh"
+
+PATH="/opt/homebrew/bin:$PATH"
+PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+
+export ASDF_CONFIG_FILE="$HOME/projects/dotfiles/asdf/asdfrc"
