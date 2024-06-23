@@ -1,5 +1,5 @@
 . "$HOME/.asdf/asdf.sh"
-. "$HOME/projects/dotfiles/zsh/prompt"
+. "$HOME/projects/dotfiles/shells/zsh/prompt"
 . <(flux completion zsh)
 
 # scripts
@@ -8,4 +8,4 @@
 PATH="/opt/homebrew/bin:$PATH"
 PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
 
-export ASDF_CONFIG_FILE="$HOME/projects/dotfiles/asdf/asdfrc"
+export ASDF_CONFIG_FILE="$HOME/projects/dotfiles/tools/asdf/asdfrc"

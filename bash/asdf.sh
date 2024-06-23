@@ -1,1 +1,0 @@
-asdf plugin-add k9s https://github.com/looztra/asdf-k9s

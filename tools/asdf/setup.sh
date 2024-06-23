@@ -1,5 +1,5 @@
 # copy 'global' tool-versions
-cp ~/projects/dotfiles/asdf/tool-versions ~/.tool-versions
+cp ~/projects/dotfiles/tools/asdf/tool-versions ~/.tool-versions
 
 # install plugins
 # languages
