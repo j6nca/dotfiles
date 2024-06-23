@@ -4,6 +4,7 @@ cp ~/projects/dotfiles/tools/asdf/tool-versions ~/.tool-versions
 # install plugins
 # languages
 asdf plugin add nodejs # https://github.com/asdf-vm/asdf-nodejs.git
+asdf plugin add golang #https://github.com/asdf-community/asdf-golang.git
 
 # infra
 asdf plugin add terraform # https://github.com/asdf-community/asdf-hashicorp.git
