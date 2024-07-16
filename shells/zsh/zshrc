@@ -7,5 +7,6 @@
 
 PATH="/opt/homebrew/bin:$PATH"
 PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
+PATH=$PATH:~/.docker/bin
 
 export ASDF_CONFIG_FILE="$HOME/projects/dotfiles/tools/asdf/asdfrc"
