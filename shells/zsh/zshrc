@@ -1,12 +1,20 @@
 . "$HOME/.asdf/asdf.sh"
-. "$HOME/projects/dotfiles/shells/zsh/prompt"
 . <(flux completion zsh)
 
 # scripts
-. "$HOME/projects/dotfiles/scripts/git.sh"
+# . "$HOME/projects/dotfiles/scripts/git.sh"
 
 PATH="/opt/homebrew/bin:$PATH"
 PATH="/home/linuxbrew/.linuxbrew/bin:$PATH"
 PATH=$PATH:~/.docker/bin
 
 export ASDF_CONFIG_FILE="$HOME/projects/dotfiles/tools/asdf/asdfrc"
+
+# Prompt
+## base
+. "$HOME/projects/dotfiles/shells/zsh/prompt"
+## Powerlevel10k
+source ~/.oh-my-zsh/custom/themes/powerlevel10k/powerlevel10k.zsh-theme
+ZSH_THEME="powerlevel10k/powerlevel10k"
+POWERLEVEL9K_RIGHT_PROMPT_ELEMENTS=(history)
+POWERLEVEL9K_SHORTEN_DIR_LENGTH=1
