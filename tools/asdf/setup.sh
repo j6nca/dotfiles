@@ -19,6 +19,6 @@ asdf plugin-add flux2     # https://github.com/tablexi/asdf-flux2.git
 asdf plugin-add fluxctl   # https://github.com/stefansedich/asdf-fluxctl
 asdf plugin-add helm      # https://github.com/Antiarchitect/asdf-helm.git
 asdf plugin-add kind      # https://github.com/johnlayton/asdf-kind.git
-
+asdf plugin-add waypoint  # https://github.com/asdf-community/asdf-hashicorp.git
 
 
