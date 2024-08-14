@@ -8,6 +8,8 @@
 	gpgsign = true
 [tag]
 	gpgsign = true
+[init]
+  defaultBranch = main
 [push]
 	default = current
 [pull]
