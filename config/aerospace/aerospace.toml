@@ -242,10 +242,14 @@ run = 'move-node-to-workspace 2'
 if.app-id = 'md.obsidian'
 run = 'move-node-to-workspace 3'
 
-## VSCode
+## Editors
 
 [[on-window-detected]]
 if.app-id = 'com.microsoft.VSCode'
+run = 'move-node-to-workspace 4'
+
+[[on-window-detected]]
+if.app-id = 'org.godotengine.godot'
 run = 'move-node-to-workspace 4'
 
 ## Misc
