@@ -252,6 +252,16 @@ run = 'move-node-to-workspace 4'
 if.app-id = 'org.godotengine.godot'
 run = 'move-node-to-workspace 4'
 
+## Gaming
+
+[[on-window-detected]]
+if.app-id = 'com.jagex.launcher'
+run = 'move-node-to-workspace 9'
+
+[[on-window-detected]]
+if.app-id = 'net.runelite.launcher'
+run = 'move-node-to-workspace 9'
+
 ## Misc
 
 [[on-window-detected]]
