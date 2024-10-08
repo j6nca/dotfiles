@@ -242,7 +242,7 @@ run = 'move-node-to-workspace 2'
 if.app-id = 'md.obsidian'
 run = 'move-node-to-workspace 3'
 
-## Editors
+## Code Editors
 
 [[on-window-detected]]
 if.app-id = 'com.microsoft.VSCode'
@@ -261,6 +261,12 @@ run = 'move-node-to-workspace 9'
 [[on-window-detected]]
 if.app-id = 'net.runelite.launcher'
 run = 'move-node-to-workspace 9'
+
+## Media Editors
+
+[[on-window-detected]]
+if.app-id = 'com.blackmagic-design.DaVinciResolve'
+run = 'move-node-to-workspace 8'
 
 ## Misc
 
