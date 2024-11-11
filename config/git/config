@@ -15,6 +15,7 @@
 [pull]
 	default = true
 [alias]
+	cmm = commit -m
 	please = push --force-with-lease
 	glob = commit --amend --no-edit
 	st = status
