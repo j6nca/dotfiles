@@ -32,3 +32,5 @@ asdf global k9s 0.32.4
 asdf global talosctl 1.7.4
 asdf global kind 0.23.0
 asdf global sops 3.9.0
+asdf global awscli 2.17.19
+asdf global aws-vault 7.2.0

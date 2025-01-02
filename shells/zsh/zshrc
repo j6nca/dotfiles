@@ -1,7 +1,7 @@
+. "$HOME/.asdf/asdf.sh"
+
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
 export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
 
 neofetch
-
-. "$HOME/.asdf/asdf.sh"
