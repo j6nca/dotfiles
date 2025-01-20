@@ -1,25 +1,25 @@
 [user]
   email = me@j6n.ca
   name = jonathan ng
-	signingkey = ~/.ssh/id_ed25519.pub
+  signingkey = ~/.ssh/id_ed25519.pub
 [gpg]
-	format = ssh
+  format = ssh
 [commit]
-	gpgsign = true
+  gpgsign = true
 [tag]
-	gpgsign = true
+  gpgsign = true
 [init]
   defaultBranch = main
 [push]
-	default = current
+  default = current
 [pull]
-	default = true
+  default = true
 [alias]
-	br = branch
+  br = branch
   co = checkout
   newb = checkout -b
   cmm = commit -m
-	please = push --force-with-lease
-	glob = commit --amend --no-edit
-	st = status
-	l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  please = push --force-with-lease
+  glob = commit --amend --no-edit
+  st = status
+  l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
