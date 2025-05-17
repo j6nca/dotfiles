@@ -1,2 +1,2 @@
 theme = GitHub Dark
-
+command = /home/linuxbrew/.linuxbrew/bin/fish --login --interactive
