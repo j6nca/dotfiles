@@ -9,4 +9,8 @@ This project leverages chezmoi to sync peronalized configuration between machine
 brew install chezmoi
 # apply configs
 chezmoi init --apply j6nca
+# install mise
+brew install mise
+# install everything via mise
+mise install
 ```
