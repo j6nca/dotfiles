@@ -7,4 +7,5 @@ tmux = "latest"
 "aqua:fish-shell/fish-shell" = "latest"
 "aqua:abiosoft/colima" = "latest"
 "aqua:docker/compose" = "latest"
-
+kubectl = "latest"
+"aqua:anomalyco/opencode" = "latest"
