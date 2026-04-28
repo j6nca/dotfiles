@@ -1,0 +1,30 @@
+# --- OS Metadata ---
+.DS_Store
+Thumbs.db
+.Spotlight-V100
+.Trashes
+
+# --- Sensitive Data (Safety Net) ---
+# Never commit raw secret files or keys
+*.pem
+*.key
+*.priv
+.netrc
+.ssh/id_*
+!.ssh/id_*.pub
+
+# --- Extension/App Noise ---
+# Ignore history files if they happen to be in tracked folders
+.bash_history
+.zsh_history
+.python_history
+.node_repl_history
+
+# --- Temporary/Backup Files ---
+*.swp
+*.bak
+*~
+.fuse_hidden*
+
+.env
+.dotenv
