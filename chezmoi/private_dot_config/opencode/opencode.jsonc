@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "provider": {
+    "bifrost": {
+      "options": {
+        "baseURL": "http://bifrost.home/v1"
+      }
+    }
+  }
+}
