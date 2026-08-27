@@ -1,5 +1,8 @@
 . "$HOME/.asdf/asdf.sh"
 
+# litellm API key for Zed's OpenAI-compatible provider (loaded from 1Password)
+export LITELLM_API_KEY="$(op read "op://Personal/litellm-j6n/password")"
+
 ZSH_THEME="powerlevel10k/powerlevel10k"
 
 export PATH="$PATH:/Applications/Docker.app/Contents/Resources/bin/"
