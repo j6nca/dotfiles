@@ -1,0 +1,13 @@
+context: homelab
+contexts:
+  homelab:
+    endpoints:
+    - 10.1.8.54
+    nodes:
+    - 10.1.8.54
+    - 10.1.8.158
+    - 10.1.8.65
+    - 10.1.8.132
+    ca: {{ onepasswordRead "op://Personal/talosconfig-chezmoi/ca" }}
+    crt: {{ onepasswordRead "op://Personal/talosconfig-chezmoi/crt" }}
+    key: {{ onepasswordRead "op://Personal/talosconfig-chezmoi/key" }}
