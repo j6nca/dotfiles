@@ -1,9 +1,16 @@
 {
   "providers": {
     "litellm": {
-      "baseUrl": "http://litellm.j6n.internal",
+      "api": "openai-completions",
+      "baseUrl": "http://litellm.j6n.internal/v1",
       "apiKey": "{{ onepasswordRead "op://Personal/litellm-j6n/password" }}",
-      "insecure": true
+      "insecure": true,
+      "authHeader": true,
+      "allowInsecureHttp": true,
+      "models": [
+        "deepseek-v4-flash",
+        "MiniMax-M3"
+      ]
     }
   }
 }

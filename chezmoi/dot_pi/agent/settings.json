@@ -1,0 +1,9 @@
+{
+  "lastChangelogVersion": "0.84.3",
+  "theme": "dark",
+  "packages": [
+    "npm:pi-provider-litellm"
+  ],
+  "defaultProvider": "litellm",
+  "defaultModel": "deepseek-v4-flash"
+}
