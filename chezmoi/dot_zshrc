@@ -1,0 +1,14 @@
+# Enable Homebrew
+eval "$(/opt/homebrew/bin/brew shellenv)"
+
+# Enable mise runtime manager
+eval "$(mise activate zsh)"
+
+# Enable Starship prompt
+eval "$(starship init zsh)"
+
+# Plugins
+source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
+source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+fastfetch
