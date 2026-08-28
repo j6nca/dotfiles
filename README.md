@@ -29,7 +29,7 @@ xcode-select --install
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
 # Install core tools & JetBrains Mono Nerd Font
-brew install chezmoi mise starship zsh-autosuggestions zsh-syntax-highlighting --cask font-jetbrains-mono-nerd-font
+brew install chezmoi mise starship fastfetch zsh-autosuggestions zsh-syntax-highlighting --cask font-jetbrains-mono-nerd-font
 ```
 
 ### 2. Provision dotfiles via chezmoi

@@ -1,24 +1,27 @@
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/master/doc/json_schema.json",
+  "display": {
+    "color": {
+      "keys": "38;2;123;190;214",      // Light blue for module labels (OS, Host, Kernel, etc.)
+      "title": "38;2;225;142;171",     // Pink for username@hostname
+      "separator": "38;2;225;142;171" // Pink for the colon/dash separators
+    },
+    "separator": " 󰁔 "
+  },
   "modules": [
     "title",
+    {
+      "type": "custom",
+      "format": "\u001b[38;2;225;142;171m----------------------------------------"
+    },
     "separator",
     "os",
     "host",
     "kernel",
     "uptime",
-    "packages",
     "shell",
     "display",
-    "de",
-    "wm",
-    "wmtheme",
-    "theme",
-    "icons",
-    "font",
-    "cursor",
     "terminal",
-    "terminalfont",
     "cpu",
     "gpu",
     "memory",
@@ -30,5 +33,19 @@
     "locale",
     "break",
     "colors"
-  ]
+  ],
+  "logo": {
+    "type": "file",
+    "source": "~/.config/fastfetch/logo.txt",
+    "position": "left",
+    "padding": {
+      "top": 0,
+      "left": 0,
+      "right": 2
+    },
+    "color": {
+      "1": "38;2;123;190;214", // Wooper Body Blue (#7BBED6)
+      "2": "38;2;225;142;171"  // Wooper Gill Pink (#E18EAB)
+    }
+  }
 }
