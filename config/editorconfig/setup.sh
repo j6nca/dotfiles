@@ -1,1 +1,0 @@
-sh ../setup.sh editorconfig ~/projects .editorconfig
