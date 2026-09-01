@@ -1,16 +1,43 @@
 {
   "providers": {
+{{- if eq .machine "stackadapt" }}
+    "bifrost": {
+      "api": "openai-completions",
+      "baseUrl": "{{ onepasswordRead "op://Stackadapt/bifrost/url" }}",
+      "apiKey": "{{ onepasswordRead "op://Stackadapt/bifrost/credential" }}",
+      "models": [
+        { "id": "openai/gpt-5.5" },
+        { "id": "openai/gpt-5.5-pro" },
+        { "id": "openai/gpt-5.4" },
+        { "id": "openai/gpt-5.3-codex" },
+        { "id": "openai/gpt-5.1-codex-max" },
+        { "id": "bedrock/anthropic.claude-opus-4-8" },
+        { "id": "bedrock/anthropic.claude-opus-4-7" },
+        { "id": "bedrock/anthropic.claude-sonnet-4-6" },
+        { "id": "bedrock/claude-haiku-4-5-20251001" },
+        { "id": "bedrock/zai.glm-5" },
+        { "id": "gemini/gemini-3.1-pro-preview" },
+        { "id": "fireworks/accounts/fireworks/models/deepseek-v4-pro" }
+      ]
+    }
+{{- else }}
     "litellm": {
       "api": "openai-completions",
       "baseUrl": "http://litellm.j6n.internal/v1",
       "apiKey": "{{ onepasswordRead "op://Personal/litellm-j6n/password" }}",
-      "insecure": true,
-      "authHeader": true,
-      "allowInsecureHttp": true,
       "models": [
-        "deepseek-v4-flash",
-        "MiniMax-M3"
+        { "id": "glm-5.1" },
+        { "id": "glm-5" },
+        { "id": "kimi-k2.6" },
+        { "id": "kimi-k2.5" },
+        { "id": "deepseek-v4-pro" },
+        { "id": "deepseek-v4-flash" },
+        { "id": "mimo-v2.5-pro" },
+        { "id": "mimo-v2.5" },
+        { "id": "MiniMax-M3" },
+        { "id": "fast-pool" }
       ]
     }
+{{- end }}
   }
 }

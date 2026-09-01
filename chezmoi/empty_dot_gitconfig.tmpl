@@ -1,5 +1,9 @@
 [user]
+{{- if eq .machine "stackadapt" }}
+  email = {{ onepasswordRead "op://Stackadapt/stackadapt/email" }}
+{{- else }}
   email = me@j6n.ca
+{{- end }}
   name = jonathan ng
   signingkey = ~/.ssh/id_ed25519.pub
 [gpg]

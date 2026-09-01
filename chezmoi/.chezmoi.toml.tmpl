@@ -1,1 +1,5 @@
+{{- $machine := promptChoiceOnce . "machine" "machine" (list "stackadapt" "personal") -}}
 sourceDir = "~/projects/dotfiles/chezmoi"
+
+[data]
+    machine = {{ $machine | quote }}

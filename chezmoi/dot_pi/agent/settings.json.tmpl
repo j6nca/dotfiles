@@ -1,9 +1,17 @@
 {
   "lastChangelogVersion": "0.84.3",
   "theme": "dark",
+{{- if eq .machine "stackadapt" }}
+  "packages": [
+    "npm:pi-mcp-adapter"
+  ],
+  "defaultProvider": "bifrost",
+  "defaultModel": "openai/gpt-5.5"
+{{- else }}
   "packages": [
     "npm:pi-provider-litellm"
   ],
   "defaultProvider": "litellm",
   "defaultModel": "deepseek-v4-flash"
+{{- end }}
 }

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+{{- if eq .machine "stackadapt" }}
+    "bifrost": {
+      "url": "https://bifrost.stackadapt.dev/mcp",
+      "headers": {
+        "Authorization": "!op read op://Stackadapt/bifrost/credential"
+      }
+    }
+{{- end }}
+  }
+}
