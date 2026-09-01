@@ -3,7 +3,7 @@
 {{- if eq .machine "stackadapt" }}
     "bifrost": {
       "api": "openai-completions",
-      "baseUrl": "{{ onepasswordRead "op://Stackadapt/bifrost/url" }}",
+      "baseUrl": "{{ onepasswordRead "op://Stackadapt/bifrost/url" }}/openai/v1",
       "apiKey": "{{ onepasswordRead "op://Stackadapt/bifrost/credential" }}",
       "models": [
         { "id": "openai/gpt-5.5" },

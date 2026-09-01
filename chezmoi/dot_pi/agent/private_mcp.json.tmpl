@@ -2,7 +2,7 @@
   "mcpServers": {
 {{- if eq .machine "stackadapt" }}
     "bifrost": {
-      "url": "{{ onepasswordRead "op://Stackadapt/bifrost/mcp_url" }}",
+      "url": "{{ onepasswordRead "op://Stackadapt/bifrost/url" }}/mcp",
       "headers": {
         "Authorization": "Bearer {{ onepasswordRead "op://Stackadapt/bifrost/credential" }}"
       }
