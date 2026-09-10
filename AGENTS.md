@@ -25,9 +25,13 @@ Read the **source template** instead. If you genuinely need to inspect an applie
 **To test a template, stub the secret calls out:**
 
 ```sh
-sed -E 's/\{\{ onepasswordRead "[^"]*" \}\}/STUB/g' <file> > /tmp/t.tmpl
-chezmoi execute-template < /tmp/t.tmpl | python3 -c 'import json,sys; json.load(sys.stdin); print("valid")'
+# matches bare calls and piped/trimmed forms: {{ onepasswordRead "..." | trimSuffix "/x" }}, {{- ... -}}
+stub() { perl -pe 's/\{\{-?\s*onepasswordRead\s+"[^"]*"(\s*\|[^}]*)?\s*-?\}\}/STUB/g' "$1"; }
+stub <file> | chezmoi execute-template --config /tmp/profile.toml \
+  | python3 -c 'import json,sys; json.load(sys.stdin); print("valid")'
 ```
+
+Confirm the stub actually caught everything before trusting the render — `stub <file> | grep -c onepasswordRead` must be `0`.
 
 This validates structure and both profile branches without touching 1Password. Render each profile by pointing `--config` at a throwaway TOML containing just the `[data]` block.
 

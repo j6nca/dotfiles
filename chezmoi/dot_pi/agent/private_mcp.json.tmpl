@@ -2,7 +2,7 @@
   "mcpServers": {
 {{- if eq .machine "stackadapt" }}
     "bifrost": {
-      "url": "{{ onepasswordRead "op://Stackadapt/bifrost/url" }}/mcp",
+      "url": "{{ onepasswordRead "op://Stackadapt/bifrost/url" | trimSuffix "/openai" }}/mcp",
       "headers": {
         "Authorization": "Bearer {{ onepasswordRead "op://Stackadapt/bifrost/password" }}"
       }
