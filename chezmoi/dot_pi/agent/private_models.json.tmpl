@@ -1,3 +1,15 @@
+{{/*
+  Only bifrost is declared by hand. The homelab side is served by the
+  pi-provider-litellm extension (see private_settings.json.tmpl), which
+  discovers the proxy's catalog at startup -- /model/info first, falling back
+  to /v1/models -- and registers each model_name it finds. A literal list here
+  would be a second copy of the litellm ConfigMap that silently goes stale
+  every time a model is added or a provider is retired, which is exactly what
+  happened to the one this replaces.
+
+  Bifrost gets no such treatment because it is not a LiteLLM proxy; the
+  extension cannot introspect it, so its models stay enumerated.
+*/ -}}
 {
   "providers": {
 {{- if eq .machine "stackadapt" }}
@@ -26,24 +38,6 @@
       "apiKey": "{{ onepasswordRead "op://Stackadapt/bifrost/password" }}",
       "models": [
         { "id": "openai/gpt-6-astra" }
-      ]
-    }
-{{- else }}
-    "litellm": {
-      "api": "openai-completions",
-      "baseUrl": "http://litellm.j6n.internal/v1",
-      "apiKey": "{{ onepasswordRead "op://Personal/litellm-j6n/password" }}",
-      "models": [
-        { "id": "glm-5.1" },
-        { "id": "glm-5" },
-        { "id": "kimi-k2.6" },
-        { "id": "kimi-k2.5" },
-        { "id": "deepseek-v4-pro" },
-        { "id": "deepseek-v4-flash" },
-        { "id": "mimo-v2.5-pro" },
-        { "id": "mimo-v2.5" },
-        { "id": "MiniMax-M3" },
-        { "id": "fast-pool" }
       ]
     }
 {{- end }}
