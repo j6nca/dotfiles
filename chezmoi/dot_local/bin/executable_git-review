@@ -1,0 +1,170 @@
+#!/bin/bash
+set -eo pipefail
+
+usage() {
+  cat <<'USAGE'
+Usage: git review [<base-ref>] [--] [<pathspec>...]
+
+Show status, diff stat, and a navigable color diff for the current working tree
+against a base reference. Directory pathspecs are included in status/stat, but
+omitted from the pager so the interactive diff opens on file-level changes.
+Untracked files are included in the summary and rendered as synthetic new-file
+diffs in the pager.
+
+Base reference resolution:
+  1. explicit <base-ref>, if provided
+  2. remote HEAD merge-base, e.g. origin/HEAD
+  3. origin/main merge-base
+  4. origin/master merge-base
+  5. upstream branch merge-base, e.g. @{upstream}
+  6. HEAD
+
+Examples:
+  git review
+  git review HEAD^
+  git review origin/main -- '*.ts'
+  git review -- 'chezmoi/dot_pi/**'
+  git review -- chezmoi/dot_pi
+
+Pager controls:
+  n / N       next / previous file
+  /^@@ Enter  switch search to hunks, then n / N navigates hunks
+  j / k       scroll down / up
+  Space / b   page down / up
+  g / G       top / bottom
+  q           quit
+USAGE
+}
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+base=""
+
+if [[ -n "${1:-}" && "${1:-}" != "--" ]]; then
+  if git rev-parse --verify --quiet "$1^{commit}" >/dev/null; then
+    base="$1"
+    shift
+  fi
+fi
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
+if [[ -z "$base" ]]; then
+  remote_head=""
+  if remote_head=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); then
+    base=$(git merge-base HEAD "$remote_head")
+  elif git rev-parse --verify --quiet origin/HEAD >/dev/null; then
+    base=$(git merge-base HEAD origin/HEAD)
+  elif git rev-parse --verify --quiet origin/main >/dev/null; then
+    base=$(git merge-base HEAD origin/main)
+  elif git rev-parse --verify --quiet origin/master >/dev/null; then
+    base=$(git merge-base HEAD origin/master)
+  elif upstream=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null); then
+    base=$(git merge-base HEAD "$upstream")
+  elif git rev-parse --verify --quiet HEAD >/dev/null; then
+    base=HEAD
+  else
+    echo "git-review: no commits found; showing unstaged tracked-file diff only" >&2
+  fi
+fi
+
+pathspecs=("$@")
+display_pathspecs=()
+omitted_dirs=()
+
+for pathspec in "${pathspecs[@]}"; do
+  case "$pathspec" in
+    *'*'*|*'?'*|*'['*|':!'*|':('*|':/'*)
+      display_pathspecs+=("$pathspec")
+      ;;
+    *)
+      if [[ -d "$pathspec" ]]; then
+        omitted_dirs+=("$pathspec")
+      else
+        display_pathspecs+=("$pathspec")
+      fi
+      ;;
+  esac
+done
+
+if [[ -n "$base" ]]; then
+  echo "Base: $base"
+fi
+
+echo
+printf '%s\n' "Status:"
+git status --short -- "${pathspecs[@]}"
+
+echo
+printf '%s\n' "Diff stat:"
+if [[ -n "$base" ]]; then
+  git diff --stat "$base" -- "${pathspecs[@]}"
+else
+  git diff --stat -- "${pathspecs[@]}"
+fi
+
+if ((${#pathspecs[@]} > 0 && ${#display_pathspecs[@]} == 0)); then
+  untracked_files=()
+else
+  untracked_files=()
+  while IFS= read -r -d '' file; do
+    untracked_files+=("$file")
+  done < <(git ls-files --others --exclude-standard -z -- "${display_pathspecs[@]}")
+fi
+
+if ((${#untracked_files[@]} > 0)); then
+  echo
+  printf 'Untracked files (%s):\n' "${#untracked_files[@]}"
+  printf '  %s\n' "${untracked_files[@]}"
+fi
+
+echo
+if ((${#omitted_dirs[@]} > 0)); then
+  printf 'Directory pathspecs shown in summary but omitted from pager:\n'
+  printf '  %s\n' "${omitted_dirs[@]}"
+  echo
+fi
+
+if ((${#pathspecs[@]} > 0 && ${#display_pathspecs[@]} == 0)); then
+  echo "No file pathspecs left for pager after omitting directories."
+  exit 0
+fi
+
+diff_file=$(mktemp)
+trap 'rm -f "$diff_file"' EXIT HUP INT TERM
+
+if [[ -n "$base" ]]; then
+  git diff --color=always "$base" -- "${display_pathspecs[@]}" > "$diff_file"
+else
+  git diff --color=always -- "${display_pathspecs[@]}" > "$diff_file"
+fi
+
+for file in "${untracked_files[@]}"; do
+  if [[ -s "$diff_file" ]]; then
+    printf '\n' >> "$diff_file"
+  fi
+
+  code=0
+  git diff --no-index --color=always -- /dev/null "$file" >> "$diff_file" || code=$?
+  if [[ "$code" -ne 0 && "$code" -ne 1 ]]; then
+    echo "git-review: failed to render untracked file diff: $file" >&2
+    exit "$code"
+  fi
+done
+
+if [[ ! -s "$diff_file" ]]; then
+  if [[ -n "$base" ]]; then
+    echo "No tracked-file or untracked-file diff against $base."
+  else
+    echo "No tracked-file or untracked-file diff."
+  fi
+  exit 0
+fi
+
+printf '%s\n' "Pager: n/N jumps files. Use /^@@ then n/N to jump hunks. Press q to quit."
+less -R '+/^diff --git' "$diff_file"

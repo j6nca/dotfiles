@@ -1,0 +1,167 @@
+#!/bin/sh
+set -eu
+
+usage() {
+  cat <<'USAGE'
+Usage: git clean-branches [options] [<target-ref>]
+
+Delete local branches whose tip is already merged into a remote target branch.
+By default, the target is your repository's remote HEAD, usually origin/main.
+
+Options:
+  -n, --dry-run   Show branches that would be deleted
+  -f, --force     Delete without prompting
+  -h, --help      Show this help
+
+Aliases:
+  git trim        Same command
+
+Target reference resolution:
+  1. explicit <target-ref>, if provided
+  2. origin/HEAD
+  3. origin/main
+  4. origin/master
+  5. current branch upstream
+
+Examples:
+  git trim
+  git trim -n
+  git trim origin/main
+  git trim upstream/main --force
+
+Notes:
+  - Protected branches are never deleted: main, master, develop, dev, trunk.
+  - The current branch is never deleted.
+  - The command runs `git fetch --all --prune` first.
+USAGE
+}
+
+dry_run=0
+force=0
+target_ref=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -n|--dry-run)
+      dry_run=1
+      ;;
+    -f|--force)
+      force=1
+      ;;
+    -h|--help)
+      usage
+      exit 0
+      ;;
+    --)
+      shift
+      if [ $# -gt 0 ]; then
+        target_ref=$1
+        shift
+      fi
+      if [ $# -gt 0 ]; then
+        echo "git-clean-branches: too many arguments" >&2
+        usage >&2
+        exit 2
+      fi
+      ;;
+    -*)
+      echo "git-clean-branches: unknown option: $1" >&2
+      usage >&2
+      exit 2
+      ;;
+    *)
+      if [ -n "$target_ref" ]; then
+        echo "git-clean-branches: too many target refs: $target_ref $1" >&2
+        usage >&2
+        exit 2
+      fi
+      target_ref=$1
+      ;;
+  esac
+  shift
+done
+
+if ! git rev-parse --git-dir >/dev/null 2>&1; then
+  echo "git-clean-branches: not a git repository" >&2
+  exit 1
+fi
+
+current_branch=$(git branch --show-current || true)
+
+printf '%s\n' "Fetching and pruning remote-tracking branches..."
+git fetch --all --prune
+
+if [ -z "$target_ref" ]; then
+  if target_ref=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null); then
+    :
+  elif git rev-parse --verify --quiet origin/HEAD >/dev/null; then
+    target_ref=origin/HEAD
+  elif git rev-parse --verify --quiet origin/main >/dev/null; then
+    target_ref=origin/main
+  elif git rev-parse --verify --quiet origin/master >/dev/null; then
+    target_ref=origin/master
+  elif target_ref=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null); then
+    :
+  else
+    echo "git-clean-branches: could not resolve a remote target branch" >&2
+    echo "Try passing one explicitly, e.g. git trim origin/main" >&2
+    exit 1
+  fi
+fi
+
+if ! target_commit=$(git rev-parse --verify --quiet "$target_ref^{commit}"); then
+  echo "git-clean-branches: target ref is not a commit: $target_ref" >&2
+  exit 1
+fi
+
+printf 'Target: %s (%s)\n' "$target_ref" "$target_commit"
+
+protected_pattern='^(main|master|develop|dev|trunk)$'
+candidates_file=$(mktemp)
+trap 'rm -f "$candidates_file"' EXIT HUP INT TERM
+
+git for-each-ref --format='%(refname:short)' refs/heads | while IFS= read -r branch; do
+  [ -n "$branch" ] || continue
+  [ "$branch" != "$current_branch" ] || continue
+  if printf '%s\n' "$branch" | grep -Eq "$protected_pattern"; then
+    continue
+  fi
+
+  if git merge-base --is-ancestor "refs/heads/$branch" "$target_commit"; then
+    printf '%s\n' "$branch" >> "$candidates_file"
+  fi
+done
+
+if [ ! -s "$candidates_file" ]; then
+  printf '%s\n' "No local branches are safe to delete."
+  exit 0
+fi
+
+candidate_count=$(wc -l < "$candidates_file" | tr -d ' ')
+
+printf '\nBranches merged into %s and safe to delete (%s):\n' "$target_ref" "$candidate_count"
+while IFS= read -r branch; do
+  printf '  %s\n' "$branch"
+done < "$candidates_file"
+
+if [ "$dry_run" -eq 1 ]; then
+  printf '\nDry run only; no branches deleted (%s candidate(s)).\n' "$candidate_count"
+  exit 0
+fi
+
+if [ "$force" -ne 1 ]; then
+  printf '\nDelete %s local branch(es)? [y/N] ' "$candidate_count"
+  read -r answer
+  case "$answer" in
+    y|Y|yes|YES) ;;
+    *)
+      printf '%s\n' "Aborted."
+      exit 0
+      ;;
+  esac
+fi
+
+printf '\nDeleting %s local branch(es)...\n' "$candidate_count"
+while IFS= read -r branch; do
+  git branch -d "$branch"
+done < "$candidates_file"
