@@ -1,0 +1,47 @@
+{{/*
+  Holds the LiteLLM key inline, which is why this file is private_ (0600) and
+  not plain settings.json: pi-provider-litellm reads its credentials from
+  ~/.pi/agent/settings.json and nowhere else, so the key cannot live in
+  private_models.json.tmpl with the others.
+
+  The alternative is "apiKey": "!op read op://Personal/litellm-j6n/password",
+  which keeps the secret off disk entirely -- pi shells out for it. That trades
+  a file-permission bit for a runtime dependency on the op CLI being unlocked
+  when pi starts, and a locked CLI stalls model discovery rather than failing
+  loudly. Inline wins here; revisit if the key ever needs rotating often.
+*/ -}}
+{
+  "lastChangelogVersion": "0.84.3",
+  "theme": "dark",
+{{- if eq .machine "stackadapt" }}
+  "packages": [
+    "npm:pi-mcp-adapter"
+  ],
+  "defaultProvider": "bifrost",
+  "defaultModel": "openai/gpt-5.5"
+{{- else }}
+  "packages": [
+    "npm:pi-provider-litellm"
+  ],
+  {{/*
+    baseUrl carries no /v1 -- the extension appends it, and strips a trailing
+    one if given. allowInsecureHttp is mandatory, not cosmetic: the extension
+    hard-rejects plaintext http for anything that is not loopback, and
+    litellm.j6n.internal is a LAN name behind envoy-internal, which has no TLS
+    listener. Without the flag every call dies at normalizeBaseUrl with
+    "LiteLLM base URL must use HTTPS except for loopback hosts", before any
+    model is discovered.
+  */}}
+  "litellm": {
+    "providers": {
+      "litellm": {
+        "baseUrl": "http://litellm.j6n.internal",
+        "apiKey": "{{ onepasswordRead "op://Personal/litellm-j6n/password" }}",
+        "allowInsecureHttp": true
+      }
+    }
+  },
+  "defaultProvider": "litellm",
+  "defaultModel": "hypercharm/deepseek-v4.1-flash"
+{{- end }}
+}
