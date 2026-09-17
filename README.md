@@ -1,5 +1,9 @@
 # dotfiles
 
+## Documentation
+
+- [Pi swarm workflow](docs/pi/swarm.md)
+
 ## macOS
 
 A fast, reproducible macOS setup workflow utilizing **Zsh**, **chezmoi** (via SSH), **mise**, and **Starship**.

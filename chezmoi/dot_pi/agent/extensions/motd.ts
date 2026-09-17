@@ -3,6 +3,10 @@ import { Text } from "@earendil-works/pi-tui";
 
 const CUSTOM_TYPE = "motd";
 
+type MotdData = {
+	workspace: string;
+};
+
 const LOGO = [
 	"  █████████████████  ",
 	"       ███    ███   ",
@@ -16,45 +20,71 @@ const LOGO = [
 export default function (pi: ExtensionAPI) {
 	let motdShownForSession = false;
 
-	pi.registerEntryRenderer(CUSTOM_TYPE, (_entry, _options, _theme) => {
-		return new Text(renderLogo(), 0, 0);
+	pi.registerEntryRenderer<MotdData>(CUSTOM_TYPE, (entry, _options, _theme) => {
+		return new Text(renderMotd(entry.data?.workspace), 0, 0);
 	});
 
 	pi.on("session_start", async (event, ctx) => {
 		if ((event.reason !== "startup" && event.reason !== "new") || ctx.mode !== "tui" || motdShownForSession) return;
 		motdShownForSession = true;
-		setMotdHeader(ctx);
+		setMotdHeader(ctx, await resolveWorkspace(pi, ctx.cwd));
 	});
 
 	pi.registerCommand("motd", {
-		description: "Print the Pi message-of-the-day logo",
-		handler: async () => {
-			appendMotd(pi);
+		description: "Print the Pi message-of-the-day",
+		handler: async (_args, ctx) => {
+			appendMotd(pi, await resolveWorkspace(pi, ctx.cwd));
 		},
 	});
 }
 
-function appendMotd(pi: ExtensionAPI): void {
-	pi.appendEntry(CUSTOM_TYPE, { timestamp: Date.now() });
+function appendMotd(pi: ExtensionAPI, workspace: string): void {
+	pi.appendEntry<MotdData>(CUSTOM_TYPE, { workspace });
 }
 
-function setMotdHeader(ctx: ExtensionContext | ExtensionCommandContext): void {
+function setMotdHeader(ctx: ExtensionContext | ExtensionCommandContext, workspace: string): void {
 	ctx.ui.setHeader((_tui, _theme) => ({
 		render(width: number): string[] {
-			return renderLogoLines(width);
+			return renderMotdLines(workspace, width);
 		},
 		invalidate() {},
 	}));
 }
 
-function renderLogo(): string {
-	return renderLogoLines().join("\n");
+function renderMotd(workspace = "Working directory: unknown"): string {
+	return renderMotdLines(workspace).join("\n");
 }
 
-function renderLogoLines(width?: number): string[] {
+function renderMotdLines(workspace: string, width?: number): string[] {
 	const logoWidth = Math.max(...LOGO.map((line) => line.length));
 	const padding = width === undefined ? "" : " ".repeat(Math.max(0, Math.floor((width - logoWidth) / 2)));
-	return ["", ...LOGO.map((line, row) => padding + gradientLogoLine(line, row)), ""];
+	const workspacePadding = width === undefined ? "" : " ".repeat(Math.max(0, Math.floor((width - visibleLength(workspace)) / 2)));
+	return ["", ...LOGO.map((line, row) => padding + gradientLogoLine(line, row)), "", workspacePadding + workspace, ""];
+}
+
+async function resolveWorkspace(pi: ExtensionAPI, cwd: string): Promise<string> {
+	const remote = await pi.exec("git", ["remote", "get-url", "origin"], { cwd, timeout: 5_000 });
+	if (remote.code === 0) {
+		const repo = parseGitHubRepo(remote.stdout.trim());
+		if (repo) return `GitHub: ${repo}`;
+	}
+
+	const root = await pi.exec("git", ["rev-parse", "--show-toplevel"], { cwd, timeout: 5_000 });
+	return root.code === 0 ? `Repository: ${root.stdout.trim()}` : `Working directory: ${cwd}`;
+}
+
+function parseGitHubRepo(remoteUrl: string): string | undefined {
+	const sshMatch = remoteUrl.match(/^git@github\.com:([^/]+\/[^/]+?)(?:\.git)?$/);
+	if (sshMatch) return sshMatch[1];
+
+	const httpsMatch = remoteUrl.match(/^https?:\/\/(?:[^@/]+@)?github\.com\/([^/]+\/[^/]+?)(?:\.git)?$/);
+	if (httpsMatch) return httpsMatch[1];
+
+	return undefined;
+}
+
+function visibleLength(text: string): number {
+	return [...text].length;
 }
 
 function gradientLogoLine(line: string, row: number): string {
