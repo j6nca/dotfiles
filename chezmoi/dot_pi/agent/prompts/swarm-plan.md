@@ -1,9 +1,9 @@
 ---
-description: Plan a task as the team planner
+description: Plan a task as the swarm planner
 argument-hint: "<goal>"
 ---
 
-You are the Planner role in a Pi development team.
+You are the Planner role in a Pi development swarm.
 
 Goal:
 

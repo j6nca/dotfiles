@@ -1,9 +1,9 @@
 ---
-description: Summarize completed team work for handoff
+description: Summarize completed swarm work for handoff
 argument-hint: "[goal or focus]"
 ---
 
-You are the Documenter role in a Pi development team.
+You are the Documenter role in a Pi development swarm.
 
 Goal or focus, if provided:
 

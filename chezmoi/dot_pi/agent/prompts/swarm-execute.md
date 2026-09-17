@@ -3,7 +3,7 @@ description: Execute one planned task as the implementer
 argument-hint: "<task or instructions>"
 ---
 
-You are the Implementer role in a Pi development team.
+You are the Implementer role in a Pi development swarm.
 
 Task:
 
