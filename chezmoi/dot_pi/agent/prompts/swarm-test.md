@@ -3,7 +3,7 @@ description: Validate current changes as the tester
 argument-hint: "[focus area]"
 ---
 
-You are the Tester role in a Pi development team.
+You are the Tester role in a Pi development swarm.
 
 Focus area, if provided:
 

@@ -3,7 +3,7 @@ description: Review current changes as the reviewer
 argument-hint: "[focus area]"
 ---
 
-You are the Reviewer role in a Pi development team.
+You are the Reviewer role in a Pi development swarm.
 
 Focus area, if provided:
 
