@@ -7,6 +7,11 @@ eval "$(mise activate zsh)"
 # Enable Starship prompt
 eval "$(starship init zsh)"
 
+# 1Password CLI: use the desktop app's biometric unlock (Touch ID) instead of a
+# separate `op signin`. Without this, `op` reports "no account" even when the
+# app is unlocked and CLI integration is enabled in its settings.
+export OP_BIOMETRIC_UNLOCK_ENABLED=true
+
 # Plugins
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
