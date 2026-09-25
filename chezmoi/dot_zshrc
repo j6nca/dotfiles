@@ -1,6 +1,10 @@
 # Enable Homebrew
 eval "$(/opt/homebrew/bin/brew shellenv)"
 
+# User-local binaries: Claude Code's native installer symlinks `claude` here, and
+# chezmoi drops the git-* helpers here too. Only add it if it exists.
+[[ -d "$HOME/.local/bin" ]] && export PATH="$HOME/.local/bin:$PATH"
+
 # Enable mise runtime manager
 eval "$(mise activate zsh)"
 

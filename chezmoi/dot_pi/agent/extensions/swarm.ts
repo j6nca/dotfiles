@@ -1,3 +1,5 @@
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import type { ExtensionAPI, ExtensionCommandContext, ExtensionContext, Theme } from "@earendil-works/pi-coding-agent";
 import { matchesKey, truncateToWidth, visibleWidth } from "@earendil-works/pi-tui";
 
@@ -17,10 +19,14 @@ interface SwarmState {
 	tasks: SwarmTask[];
 	currentTaskId?: number;
 	nextTaskId: number;
+	lastImportTaskIds?: number[];
 	updatedAt: number;
 }
 
 const CUSTOM_TYPE = "swarm-state";
+const COORDINATOR_CUSTOM_TYPE = "coordinator-state";
+const MAX_IMPORTED_TASKS = 100;
+const MAX_TASK_LENGTH = 500;
 
 export default function (pi: ExtensionAPI) {
 	let state: SwarmState | undefined;
@@ -38,6 +44,51 @@ export default function (pi: ExtensionAPI) {
 		state = next;
 		pi.appendEntry(CUSTOM_TYPE, next ?? null);
 		updateWidget(ctx, state);
+	};
+
+	const importTasks = (ctx: ExtensionContext, taskTexts: string[], source: string): number => {
+		if (!state) {
+			ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+			return 0;
+		}
+
+		const existing = new Set(state.tasks.map((task) => normalizeTaskText(task.text)));
+		const unique: string[] = [];
+		let wasCapped = false;
+		for (const text of taskTexts) {
+			const normalized = normalizeTaskText(text);
+			if (!normalized || existing.has(normalized)) continue;
+			if (looksSensitive(text)) {
+				ctx.ui.notify(`Skipped a ${source} task that looked like it might contain a secret.`, "warning");
+				continue;
+			}
+			existing.add(normalized);
+			unique.push(text.trim().slice(0, MAX_TASK_LENGTH));
+			if (unique.length >= MAX_IMPORTED_TASKS) {
+				wasCapped = true;
+				break;
+			}
+		}
+
+		if (unique.length === 0) {
+			ctx.ui.notify(`No new swarm tasks found in ${source}.`, "warning");
+			return 0;
+		}
+
+		const tasks = unique.map((text, index): SwarmTask => ({ id: state!.nextTaskId + index, text, status: "todo" }));
+		const next: SwarmState = {
+			...state,
+			tasks: [...state.tasks, ...tasks],
+			nextTaskId: state.nextTaskId + tasks.length,
+			lastImportTaskIds: tasks.map((task) => task.id),
+			updatedAt: Date.now(),
+		};
+		saveState(ctx, next);
+		ctx.ui.notify(
+			`Imported ${tasks.length} swarm task${tasks.length === 1 ? "" : "s"} from ${source}.${wasCapped ? ` Import capped at ${MAX_IMPORTED_TASKS}.` : ""}`,
+			"info",
+		);
+		return tasks.length;
 	};
 
 	pi.on("session_start", async (_event, ctx) => restoreState(ctx));
@@ -87,6 +138,142 @@ export default function (pi: ExtensionAPI) {
 			};
 			saveState(ctx, next);
 			ctx.ui.notify(`Added swarm task #${task.id}`, "info");
+		},
+	});
+
+	pi.registerCommand("swarm-add-file", {
+		description: "Import swarm tasks from a markdown or text file",
+		handler: async (args, ctx) => {
+			const inputPath = args.trim();
+			if (!inputPath) {
+				ctx.ui.notify("Usage: /swarm-add-file <path>", "error");
+				return;
+			}
+
+			const filePath = path.resolve(ctx.cwd, inputPath);
+			let text: string;
+			try {
+				text = await fs.readFile(filePath, "utf-8");
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error);
+				ctx.ui.notify(`Could not read swarm task file: ${message}`, "error");
+				return;
+			}
+
+			importTasks(ctx, parseSwarmTasksFromText(text), inputPath);
+		},
+	});
+
+	pi.registerCommand("swarm-promote-plan", {
+		description: "Import tasks from the Plan section of the latest assistant response",
+		handler: async (_args, ctx) => {
+			const text = getLastAssistantText(ctx);
+			if (!text) {
+				ctx.ui.notify("No complete assistant response found to promote.", "error");
+				return;
+			}
+
+			const plan = extractMarkdownSection(text, "Plan") ?? text;
+			importTasks(ctx, parseSwarmTasksFromText(plan), "latest plan");
+		},
+	});
+
+	pi.registerCommand("swarm-remove", {
+		description: "Remove one swarm task by id",
+		handler: async (args, ctx) => {
+			if (!state) {
+				ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+				return;
+			}
+
+			const id = parseTaskId(args.trim());
+			if (!id) {
+				ctx.ui.notify("Usage: /swarm-remove <task-id>", "error");
+				return;
+			}
+
+			const next = removeTaskIds(state, [id]);
+			if (next.tasks.length === state.tasks.length) {
+				ctx.ui.notify(`Swarm task #${id} not found.`, "error");
+				return;
+			}
+
+			saveState(ctx, next);
+			ctx.ui.notify(`Removed swarm task #${id}.`, "info");
+		},
+	});
+
+	pi.registerCommand("swarm-remove-range", {
+		description: "Remove a contiguous range of swarm tasks by id",
+		handler: async (args, ctx) => {
+			if (!state) {
+				ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+				return;
+			}
+
+			const range = parseTaskIdRange(args);
+			if (!range) {
+				ctx.ui.notify("Usage: /swarm-remove-range <start-id> <end-id>", "error");
+				return;
+			}
+
+			const ids = state.tasks.filter((task) => task.id >= range.start && task.id <= range.end).map((task) => task.id);
+			if (ids.length === 0) {
+				ctx.ui.notify(`No swarm tasks found in range #${range.start}-#${range.end}.`, "warning");
+				return;
+			}
+
+			saveState(ctx, removeTaskIds(state, ids));
+			ctx.ui.notify(`Removed ${ids.length} swarm task${ids.length === 1 ? "" : "s"} from #${range.start}-#${range.end}.`, "info");
+		},
+	});
+
+	pi.registerCommand("swarm-clear-tasks", {
+		description: "Remove all tasks from the current swarm",
+		handler: async (_args, ctx) => {
+			if (!state) {
+				ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+				return;
+			}
+			if (state.tasks.length === 0) {
+				ctx.ui.notify("Swarm has no tasks to clear.", "info");
+				return;
+			}
+
+			if (ctx.hasUI) {
+				const ok = await ctx.ui.confirm("Clear swarm tasks?", "This removes all tasks from the current swarm but keeps the goal.");
+				if (!ok) return;
+			}
+
+			saveState(ctx, { ...state, tasks: [], currentTaskId: undefined, lastImportTaskIds: undefined, updatedAt: Date.now() });
+			ctx.ui.notify("Cleared all swarm tasks.", "info");
+		},
+	});
+
+	pi.registerCommand("swarm-undo-import", {
+		description: "Undo the last swarm bulk import",
+		handler: async (_args, ctx) => {
+			if (!state) {
+				ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+				return;
+			}
+
+			const ids = state.lastImportTaskIds ?? [];
+			if (ids.length === 0) {
+				ctx.ui.notify("No swarm bulk import is available to undo.", "warning");
+				return;
+			}
+
+			const next = removeTaskIds(state, ids);
+			const removed = state.tasks.length - next.tasks.length;
+			if (removed === 0) {
+				saveState(ctx, { ...state, lastImportTaskIds: undefined, updatedAt: Date.now() });
+				ctx.ui.notify("Last imported swarm tasks were already removed.", "warning");
+				return;
+			}
+
+			saveState(ctx, { ...next, lastImportTaskIds: undefined });
+			ctx.ui.notify(`Undid last swarm bulk import and removed ${removed} task${removed === 1 ? "" : "s"}.`, "info");
 		},
 	});
 
@@ -165,6 +352,64 @@ export default function (pi: ExtensionAPI) {
 			}
 
 			ctx.ui.notify("Swarm is already done.", "info");
+		},
+	});
+
+	pi.registerCommand("swarm-dispatch", {
+		description: "Bridge one swarm task into the coordinator and dispatch it to an agent",
+		handler: async (args, ctx) => {
+			if (!state) {
+				ctx.ui.notify("No swarm is active. Run /swarm-start <goal> first.", "error");
+				return;
+			}
+
+			const parsed = parseSwarmDispatchCommand(args);
+			if (!parsed) {
+				ctx.ui.notify("Usage: /swarm-dispatch <task-id> <agent> [--project|--both]", "error");
+				return;
+			}
+
+			const task = state.tasks.find((item) => item.id === parsed.id);
+			if (!task) {
+				ctx.ui.notify(`Swarm task #${parsed.id} not found.`, "error");
+				return;
+			}
+			if (task.status === "done" || task.status === "blocked") {
+				ctx.ui.notify(`Swarm task #${task.id} is ${task.status} and cannot be dispatched.`, "error");
+				return;
+			}
+			if (looksSensitive(task.text)) {
+				ctx.ui.notify(`Swarm task #${task.id} looks like it may contain a secret and will not be dispatched.`, "error");
+				return;
+			}
+
+			if (hasCoordinatorState(ctx) && ctx.hasUI) {
+				const ok = await ctx.ui.confirm("Replace coordinator bridge state?", "This appends a new one-task coordinator state for the selected swarm task.");
+				if (!ok) return;
+			}
+
+			const now = Date.now();
+			pi.appendEntry(COORDINATOR_CUSTOM_TYPE, {
+				goal: `Swarm task #${task.id}: ${state.goal}`,
+				phase: "ready",
+				tasks: [
+					{
+						id: 1,
+						text: task.text,
+						status: "todo",
+						createdAt: now,
+						updatedAt: now,
+					},
+				],
+				nextTaskId: 2,
+				createdAt: now,
+				updatedAt: now,
+			});
+
+			const next = updateTask(state, task.id, { status: "in_progress", note: `Dispatched to coordinator agent ${parsed.agent}.` }, "executing");
+			saveState(ctx, next);
+			ctx.ui.notify(`Bridged swarm task #${task.id} to coordinator task #1 for ${parsed.agent}.`, "info");
+			await sendTemplate(pi, ctx, `/coordinate-dispatch 1 ${parsed.agent}${parsed.scopeArg ? ` ${parsed.scopeArg}` : ""}`);
 		},
 	});
 
@@ -274,6 +519,7 @@ function normalizeState(data: unknown): SwarmState | undefined {
 		tasks,
 		currentTaskId: typeof raw.currentTaskId === "number" ? raw.currentTaskId : undefined,
 		nextTaskId: typeof raw.nextTaskId === "number" ? raw.nextTaskId : maxId + 1,
+		lastImportTaskIds: Array.isArray(raw.lastImportTaskIds) ? raw.lastImportTaskIds.filter((id): id is number => typeof id === "number") : undefined,
 		updatedAt: typeof raw.updatedAt === "number" ? raw.updatedAt : Date.now(),
 	};
 }
@@ -289,6 +535,54 @@ function updateTask(state: SwarmState, id: number, patch: Partial<SwarmTask>, ph
 	};
 }
 
+function removeTaskIds(state: SwarmState, ids: number[]): SwarmState {
+	const remove = new Set(ids);
+	const remainingImportIds = state.lastImportTaskIds?.filter((id) => !remove.has(id));
+	return {
+		...state,
+		tasks: state.tasks.filter((task) => !remove.has(task.id)),
+		currentTaskId: state.currentTaskId && remove.has(state.currentTaskId) ? undefined : state.currentTaskId,
+		lastImportTaskIds: remainingImportIds && remainingImportIds.length > 0 ? remainingImportIds : undefined,
+		updatedAt: Date.now(),
+	};
+}
+
+function parseTaskId(args: string): number | undefined {
+	const match = args.match(/^(?:#)?(\d+)$/);
+	return match ? Number(match[1]) : undefined;
+}
+
+function parseTaskIdRange(args: string): { start: number; end: number } | undefined {
+	const parts = args.trim().split(/\s+/).filter(Boolean);
+	if (parts.length !== 2) return undefined;
+	const first = parseTaskId(parts[0]!);
+	const second = parseTaskId(parts[1]!);
+	if (!first || !second) return undefined;
+	return { start: Math.min(first, second), end: Math.max(first, second) };
+}
+
+function parseSwarmDispatchCommand(args: string): { id: number; agent: string; scopeArg?: string } | undefined {
+	const parts = args.trim().split(/\s+/).filter(Boolean);
+	if (parts.length < 2 || parts.length > 3) return undefined;
+	const idMatch = parts[0]!.match(/^(?:#)?(\d+)$/);
+	if (!idMatch) return undefined;
+	if (parts[2] && !isAgentScopeArg(parts[2])) return undefined;
+	return { id: Number(idMatch[1]), agent: parts[1]!, scopeArg: parts[2] };
+}
+
+function isAgentScopeArg(value: string): boolean {
+	return ["project", "--project", "both", "--both"].includes(value);
+}
+
+function hasCoordinatorState(ctx: ExtensionContext): boolean {
+	const branch = ctx.sessionManager.getBranch();
+	for (let i = branch.length - 1; i >= 0; i--) {
+		const entry = branch[i];
+		if (entry.type === "custom" && entry.customType === COORDINATOR_CUSTOM_TYPE) return entry.data !== null;
+	}
+	return false;
+}
+
 function parseTaskCommand(args: string, defaultId: number | undefined): { id: number | undefined; rest: string } {
 	const trimmed = args.trim();
 	if (!trimmed) return { id: defaultId, rest: "" };
@@ -297,6 +591,88 @@ function parseTaskCommand(args: string, defaultId: number | undefined): { id: nu
 	if (match) return { id: Number(match[1]), rest: match[2]?.trim() ?? "" };
 
 	return { id: defaultId, rest: trimmed };
+}
+
+function parseSwarmTasksFromText(text: string): string[] {
+	const tasks: string[] = [];
+	let inFence = false;
+
+	for (const rawLine of text.split(/\r?\n/)) {
+		const line = rawLine.trim();
+		if (line.startsWith("```")) {
+			inFence = !inFence;
+			continue;
+		}
+		if (!line) continue;
+
+		// Allow explicit /swarm-add commands anywhere, including fenced command blocks.
+		const commandMatch = line.match(/^\/swarm-add\s+(.+)$/);
+		if (commandMatch) {
+			tasks.push(cleanTaskText(commandMatch[1]));
+			continue;
+		}
+
+		// Only import top-level markdown list items. Nested bullets in a plan are
+		// details, not separate swarm tasks. Fenced non-command content is ignored.
+		if (!inFence && !/^\s/.test(rawLine)) {
+			const markdownMatch = rawLine.match(/^(?:[-*+]\s+|\d+[.)]\s+|\[[ xX-]\]\s+)(.+)$/);
+			if (markdownMatch) tasks.push(cleanTaskText(markdownMatch[1]));
+		}
+	}
+
+	const seen = new Set<string>();
+	return tasks.filter((task) => {
+		const normalized = normalizeTaskText(task);
+		if (!normalized || seen.has(normalized)) return false;
+		seen.add(normalized);
+		return true;
+	});
+}
+
+function cleanTaskText(text: string): string {
+	return text
+		.trim()
+		.replace(/^`\/swarm-add\s+(.+)`$/, "$1")
+		.replace(/^\*\*(.+)\*\*$/, "$1")
+		.trim();
+}
+
+function extractMarkdownSection(text: string, heading: string): string | undefined {
+	const escaped = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	const pattern = new RegExp(`^#{1,6}\\s+${escaped}\\s*$`, "im");
+	const match = pattern.exec(text);
+	if (!match) return undefined;
+
+	const start = match.index + match[0].length;
+	const rest = text.slice(start);
+	const nextHeading = rest.search(/^#{1,6}\s+\S/m);
+	return (nextHeading >= 0 ? rest.slice(0, nextHeading) : rest).trim();
+}
+
+function getLastAssistantText(ctx: ExtensionContext): string | undefined {
+	const branch = ctx.sessionManager.getBranch();
+	for (let i = branch.length - 1; i >= 0; i--) {
+		const entry = branch[i];
+		if (entry.type !== "message") continue;
+		const message = entry.message;
+		if (!("role" in message) || message.role !== "assistant") continue;
+		if ("stopReason" in message && message.stopReason && message.stopReason !== "stop") continue;
+		const textParts = Array.isArray(message.content)
+			? message.content
+					.filter((content): content is { type: "text"; text: string } => content.type === "text" && typeof content.text === "string")
+					.map((content) => content.text)
+			: [];
+		if (textParts.length > 0) return textParts.join("\n");
+	}
+	return undefined;
+}
+
+function normalizeTaskText(text: string): string {
+	return text.trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function looksSensitive(text: string): boolean {
+	return /(sk-|ghp_|AKIA|xoxb-|-----BEGIN [^-]+ PRIVATE KEY-----|\b(api[_-]?key|password|token|secret|credential)\s*[:=])/i.test(text);
 }
 
 function updateWidget(ctx: ExtensionContext, state: SwarmState | undefined): void {
