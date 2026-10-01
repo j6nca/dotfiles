@@ -1,0 +1,4 @@
+# Commit identity for public GitHub orgs. Included from ~/.gitconfig via
+# includeIf so the work email never lands in public history.
+[user]
+  email = 72368152+j6nca@users.noreply.github.com

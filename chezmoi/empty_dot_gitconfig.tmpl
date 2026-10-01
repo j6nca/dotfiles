@@ -31,3 +31,13 @@
   trim = !$HOME/.local/bin/git-clean-branches
   l = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
 
+# Public GitHub orgs commit as the GitHub noreply address on both profiles.
+# Must stay below [user] so it overrides the email set there.
+[includeIf "hasconfig:remote.*.url:git@github.com:ctrl-research/**"]
+  path = ~/.config/git/github-noreply.gitconfig
+[includeIf "hasconfig:remote.*.url:https://github.com/ctrl-research/**"]
+  path = ~/.config/git/github-noreply.gitconfig
+[includeIf "hasconfig:remote.*.url:git@github.com:j6nca/**"]
+  path = ~/.config/git/github-noreply.gitconfig
+[includeIf "hasconfig:remote.*.url:https://github.com/j6nca/**"]
+  path = ~/.config/git/github-noreply.gitconfig
