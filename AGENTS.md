@@ -50,6 +50,7 @@ chezmoi/               # the chezmoi source state
   dot_pi/agent/{private_models.json,private_mcp.json,settings.json}.tmpl
   dot_talos/private_config.tmpl
   private_dot_config/{cmux,fastfetch,mise,opencode,zed}/…
+  private_dot_config/git/github-noreply.gitconfig  # noreply email, included for ctrl-research/j6nca remotes
 ```
 
 ## Conventions
