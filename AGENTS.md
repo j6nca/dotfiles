@@ -49,6 +49,7 @@ chezmoi/               # the chezmoi source state
   empty_dot_gitconfig.tmpl
   dot_pi/agent/{private_models.json,private_mcp.json,settings.json}.tmpl
   dot_talos/private_config.tmpl
+  dot_claude/mods/<name>/  # Claude Code mods; loaded via CLAUDE_CODE_PLUGIN_DIRS in dot_zshrc
   private_dot_config/{cmux,fastfetch,mise,opencode,zed}/…
   private_dot_config/git/github-noreply.gitconfig  # noreply email, included for ctrl-research/j6nca remotes
 ```

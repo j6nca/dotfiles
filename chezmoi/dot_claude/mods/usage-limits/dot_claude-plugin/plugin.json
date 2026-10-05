@@ -1,0 +1,7 @@
+{
+  "name": "usage-limits",
+  "version": "0.2.1",
+  "description": "Weekly usage limits (total and per-model) as bars above the prompt, with a countdown to the next reset",
+  "author": { "name": "j6nca" },
+  "types": "./types/index.d.ts"
+}
