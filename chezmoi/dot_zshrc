@@ -20,6 +20,9 @@ export OP_BIOMETRIC_UNLOCK_ENABLED=true
 # Colon-separated; each folder loads as a --plugin-dir and hot-reloads on save.
 export CLAUDE_CODE_PLUGIN_DIRS="$HOME/.claude/mods/usage-limits"
 
+# Aliases
+alias motd="fastfetch"
+
 # Plugins
 source $(brew --prefix)/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 source $(brew --prefix)/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
