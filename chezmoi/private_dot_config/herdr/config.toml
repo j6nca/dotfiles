@@ -1,0 +1,26 @@
+# ~/.config/herdr/config.toml
+#
+# Managed by chezmoi. Deliberately shared by both machine profiles: herdr only
+# owns agent *terminals*. Agent credentials live in each agent's own config, and
+# remote machines are stored as SSH hosts rather than here, so nothing in this
+# file is machine-identifying.
+#
+# Everything not set below keeps herdr's built-in default. Run
+# `herdr --default-config` for the full annotated reference.
+
+[theme]
+# Follow the host terminal's light/dark appearance. Note that with auto_switch
+# enabled herdr ignores `theme.name` entirely and reads only dark_name/light_name.
+auto_switch = true
+dark_name = "solarized"
+light_name = "solarized-light"
+
+[session]
+# Resume supported agent panes into their native conversations on restore.
+# This is herdr's default; set explicitly so it survives any future default change.
+resume_agents_on_restore = true
+
+[keys.indexed]
+# alt+1..9 jumps straight to an agent pane. On macOS this needs "Option as Meta"
+# (or the kitty keyboard protocol) enabled in your terminal, otherwise use "ctrl+alt".
+agents = "alt"
