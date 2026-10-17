@@ -4,9 +4,10 @@ These are default instructions for all repositories. More-specific `AGENTS.md`, 
 
 ## Response style
 
-- Be concise by default.
-- Prefer short answers and bullet points.
-- Do not explain implementation details unless they are useful for the user's next decision.
+- Be concise by default and get straight to the result. No preamble, recap, or "here's what I did" narration.
+- Prefer 1-5 short bullets; keep prose minimal unless the task genuinely needs more.
+- Do not re-paste or restate tool output in your replies; reference it briefly.
+- Do not explain implementation details unless they affect the user's next decision.
 - When reporting completed work, include only: what changed, files touched, tests run, and any follow-up needed.
 - Expand only when the user asks for detail, design rationale, tradeoffs, or debugging explanation.
 
