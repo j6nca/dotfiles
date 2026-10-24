@@ -1,0 +1,11 @@
+# Agent skills library (github.com/thanoslabs/skills). Cloned rather than
+# copied file-by-file so `chezmoi update` pulls new skills; refreshPeriod caps
+# how often (force with `chezmoi update --refresh-externals`).
+#
+# run_after_link-agent-skills.sh.tmpl symlinks each skill into ~/.agents/skills
+# (pi, Codex, opencode) and, on stackadapt, ~/.claude/skills (Claude Code).
+[".local/share/agent-skills"]
+    type = "git-repo"
+    url = "https://github.com/thanoslabs/skills.git"
+    refreshPeriod = "168h"
+    pull.args = ["--ff-only"]
