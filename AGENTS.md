@@ -45,6 +45,8 @@ This validates structure and both profile branches without touching 1Password. R
 .chezmoiroot           # "chezmoi" -> source dir is chezmoi/, not the repo root
 chezmoi/               # the chezmoi source state
   .chezmoi.toml.tmpl   # rendered once per machine at `chezmoi init`; sets .machine
+  .chezmoiexternal.toml           # clones thanoslabs/skills to ~/.local/share/agent-skills
+  run_after_link-agent-skills.sh.tmpl  # symlinks each skill into ~/.agents/skills, plus ~/.claude/skills on stackadapt
   dot_zshrc
   empty_dot_gitconfig.tmpl
   dot_pi/agent/{private_models.json,private_mcp.json,settings.json}.tmpl

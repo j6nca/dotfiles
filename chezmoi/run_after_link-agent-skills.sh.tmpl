@@ -1,0 +1,41 @@
+#!/bin/sh
+# Links each skill in the agent-skills clone (see .chezmoiexternal.toml) into
+# ~/.agents/skills, the shared Agent Skills location that pi, Codex, and
+# opencode all read natively. Claude Code doesn't read it, so on stackadapt
+# (where Claude is used) the skills are linked into ~/.claude/skills as well.
+#
+# Links are per skill because Claude Code and opencode only discover skills
+# one level deep. Runs on every apply: it's cheap, and the skill list changes
+# with each pull. Anything that isn't a symlink -- e.g. Claude's app-managed
+# synced/ directory -- is left alone.
+set -eu
+
+src="$HOME/.local/share/agent-skills/skills"
+dests="$HOME/.agents/skills"
+{{- if eq .machine "stackadapt" }}
+dests="$dests $HOME/.claude/skills"
+{{- end }}
+
+[ -d "$src" ] || exit 0
+
+for dest in $dests; do
+  mkdir -p "$dest"
+
+  for skill in "$src"/*/; do
+    [ -f "${skill}SKILL.md" ] || continue
+    name=$(basename "$skill")
+    if [ -e "$dest/$name" ] && [ ! -L "$dest/$name" ]; then
+      echo "link-agent-skills: $dest/$name exists and is not a symlink; skipping" >&2
+      continue
+    fi
+    ln -sfn "${skill%/}" "$dest/$name"
+  done
+
+  # Prune links to skills that were removed or renamed upstream.
+  for link in "$dest"/*; do
+    [ -L "$link" ] || continue
+    case "$(readlink "$link")" in
+      "$src"/*) [ -e "$link" ] || rm "$link" ;;
+    esac
+  done
+done
